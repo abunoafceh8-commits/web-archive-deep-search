@@ -1,0 +1,19 @@
+{
+  "name": "web-archive-deep-search",
+  "title": "ذاكرة الويب العميقة — البحث المتقدم في أرشيفات الويب",
+  "category": "بحث وأرشيف",
+  "description": "أداة احترافية للبحث في أرشيفات وسجلات الإنترنت القديمة (Wayback Machine وأرشيفات الويب).",
+  "liveUrl": "https://s5nljp-e30alwvda-arcadawebapps2.vercel.app/",
+  "aliases": [],
+  "sourceLinks": [],
+  "originalTitle": "ذاكرة الويب العميقة | البحث في أرشيفات الإنترنت القديمة",
+  "originalDescription": "ذاكرة الويب العميقة — أداة احترافية للبحث في أرشيفات وسجلات الإنترنت القديمة",
+  "type": "static-website",
+  "archivedAt": "2026-10-15",
+  "readyForHosting": true,
+  "files": [
+    "favicon.svg",
+    "assets/index-BsMqNzMH.js",
+    "assets/index-CURRIYPY.css"
+  ]
+}
