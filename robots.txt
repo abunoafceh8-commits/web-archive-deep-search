@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://web-archive-deep-search.vercel.app/sitemap.xml
