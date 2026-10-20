@@ -8,15 +8,17 @@ export default async function handler(req, res) {
   if (!url) return res.status(400).json({ error: 'URL required' });
 
   try {
-    const r = await fetch(`https://s5nljp-e30alwvda-arcadawebapps2.vercel.app/api/deep-search?url=${encodeURIComponent(url)}&limit=${limit}&matchType=${matchType}`, {
-      signal: AbortSignal.timeout(15000)
+    const r = await fetch(`https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&matchType=${matchType}&output=json&limit=${Math.min(parseInt(limit), 50)}&fl=timestamp,original,statuscode,mimetype,length&collapse=urlkey`, {
+      headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(12000)
     });
-    return res.json(await r.json());
+    const data = await r.json();
+    const [, ...rows] = data;
+    const results = rows.map(r => ({
+      timestamp: r[0], original: r[1], status: r[2], mimetype: r[3], length: r[4],
+      archiveUrl: `https://web.archive.org/web/${r[0]}/${r[1]}`
+    }));
+    res.json({ results, total: results.length, query: url });
   } catch (e) {
-    try {
-      const r = await fetch(`https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&matchType=${matchType}&output=json&limit=${limit}&fl=timestamp,original,statuscode,mimetype&collapse=urlkey`, { signal: AbortSignal.timeout(10000) });
-      const d = await r.json(); const [,...rows] = d;
-      return res.json({ results: rows.map(r => ({ timestamp: r[0], original: r[1], status: r[2], mimetype: r[3], archiveUrl: `https://web.archive.org/web/${r[0]}/${r[1]}` })), total: rows.length, query: url });
-    } catch { return res.json({ results: [], total: 0, query: url, error: e.message }); }
+    res.json({ results: [], total: 0, query: url, error: e.message });
   }
 }
