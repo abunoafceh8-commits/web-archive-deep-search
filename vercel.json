@@ -1,4 +1,11 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "framework": null,
+  "rewrites": [
+    { "source": "/api/deep-search", "destination": "/api/deep-search" },
+    { "source": "/api/wayback-availability", "destination": "/api/wayback-availability" },
+    { "source": "/api/history", "destination": "/api/history" },
+    { "source": "/api/saved", "destination": "/api/saved" }
+  ]
 }
