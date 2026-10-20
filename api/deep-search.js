@@ -1,48 +1,22 @@
 export default async function handler(req, res) {
-  const { url, matchType = 'prefix', limit = 50 } = req.query;
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const { url, limit = 30, matchType = 'prefix' } = req.method === 'GET' ? req.query : (typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {});
   if (!url) return res.status(400).json({ error: 'URL required' });
 
   try {
-    const cdxUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&matchType=${matchType}&output=json&limit=${Math.min(parseInt(limit), 30)}&fl=timestamp,original,statuscode,mimetype,length&collapse=urlkey`;
-    const r = await fetch(cdxUrl, { 
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-      signal: AbortSignal.timeout(8000)
+    const r = await fetch(`https://s5nljp-e30alwvda-arcadawebapps2.vercel.app/api/deep-search?url=${encodeURIComponent(url)}&limit=${limit}&matchType=${matchType}`, {
+      signal: AbortSignal.timeout(15000)
     });
-    const data = await r.json();
-    const [headers, ...rows] = data;
-    const results = rows.map(row => ({
-      timestamp: row[0],
-      original: row[1],
-      status: row[2],
-      mimetype: row[3],
-      length: row[4],
-      archiveUrl: `https://web.archive.org/web/${row[0]}/${row[1]}`
-    }));
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 's-maxage=300');
-    return res.json({ results, total: results.length, query: url });
+    return res.json(await r.json());
   } catch (e) {
-    // If CDX fails, try wayback availability API as fallback
     try {
-      const r2 = await fetch(`https://archive.org/wayback/available?url=${encodeURIComponent(url)}`, {
-        signal: AbortSignal.timeout(5000)
-      });
-      const d2 = await r2.json();
-      if (d2.archived_snapshots?.closest) {
-        const snap = d2.archived_snapshots.closest;
-        return res.json({
-          results: [{
-            timestamp: snap.timestamp,
-            original: url,
-            status: snap.status,
-            archiveUrl: snap.url
-          }],
-          total: 1,
-          query: url,
-          note: 'Limited results - CDX timeout'
-        });
-      }
-    } catch {}
-    return res.json({ results: [], total: 0, query: url, error: e.message });
+      const r = await fetch(`https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(url)}&matchType=${matchType}&output=json&limit=${limit}&fl=timestamp,original,statuscode,mimetype&collapse=urlkey`, { signal: AbortSignal.timeout(10000) });
+      const d = await r.json(); const [,...rows] = d;
+      return res.json({ results: rows.map(r => ({ timestamp: r[0], original: r[1], status: r[2], mimetype: r[3], archiveUrl: `https://web.archive.org/web/${r[0]}/${r[1]}` })), total: rows.length, query: url });
+    } catch { return res.json({ results: [], total: 0, query: url, error: e.message }); }
   }
 }
